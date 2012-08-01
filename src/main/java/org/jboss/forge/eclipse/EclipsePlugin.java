@@ -49,11 +49,10 @@ import org.jboss.forge.shell.ShellMessages;
 import org.jboss.forge.shell.ShellPrompt;
 import org.jboss.forge.shell.plugins.Alias;
 import org.jboss.forge.shell.plugins.Command;
+import org.jboss.forge.shell.plugins.DefaultCommand;
 import org.jboss.forge.shell.plugins.Option;
 import org.jboss.forge.shell.plugins.PipeOut;
 import org.jboss.forge.shell.plugins.Plugin;
-import org.jboss.forge.shell.plugins.RequiresFacet;
-import org.jboss.forge.shell.plugins.RequiresProject;
 import org.jboss.forge.shell.util.ResourceUtil;
 
 /**
@@ -61,8 +60,8 @@ import org.jboss.forge.shell.util.ResourceUtil;
  * 
  */
 @Alias("eclipse-plugins")
-@RequiresProject
-@RequiresFacet({ DependencyFacet.class, MavenPluginFacet.class })
+// @RequiresProject
+// @RequiresFacet({ DependencyFacet.class, MavenPluginFacet.class })
 public class EclipsePlugin implements Plugin
 {
 
@@ -81,6 +80,19 @@ public class EclipsePlugin implements Plugin
 
    @Inject
    private Event<InstallFacets> event;
+
+   @DefaultCommand
+   public void status(final PipeOut out)
+   {
+      if (project.hasFacet(EclipsePluginFacet.class))
+      {
+         ShellMessages.success(out, "EclipsePlugin is installed.");
+      }
+      else
+      {
+         ShellMessages.warn(out, "EclipsePlugin is NOT installed.");
+      }
+   }
 
    @Command("setup")
    public void setup(
@@ -176,52 +188,10 @@ public class EclipsePlugin implements Plugin
       mavenFacet.setPOM(pom);
    }
 
-   // private void installBuildProperties(String sourceDirectory)
-   // {
-   // MavenCoreFacet mavenFacet = project.getFacet(MavenCoreFacet.class);
-   // Model pom = mavenFacet.getPOM();
-   // if(!sourceDirectory.equals(pom.getBuild().getSourceDirectory()))
-   // {
-   // pom.getBuild().setSourceDirectory(sourceDirectory);
-   // mavenFacet.setPOM(pom);
-   // }
-   // }
-   //
-   //
-   // private void installManifest()
-   // {
-   // if (project.hasFacet(ResourceFacet.class))
-   // {
-   // if(!project.getFacet(ResourceFacet.class).getResource("META-INF/MANIFEST.MF").exists())
-   // {
-   //
-   // MavenCoreFacet mavenFacet = project.getFacet(MavenCoreFacet.class);
-   // Model pom = mavenFacet.getPOM();
-   //
-   // Manifest manifest = new Manifest();
-   // manifest.getMainAttributes().put(Name.MANIFEST_VERSION, "1.0");
-   // manifest.getMainAttributes().putValue(Constants.BUNDLE_MANIFESTVERSION , "2");
-   // manifest.getMainAttributes().put(new Name(Constants.BUNDLE_NAME), pom.getArtifactId());
-   // manifest.getMainAttributes().put(new Name(Constants.BUNDLE_SYMBOLICNAME), pom.getArtifactId() +
-   // "; singleton:=true");
-   // manifest.getMainAttributes().put(new Name(Constants.BUNDLE_VERSION), pom.getVersion().replace("SNAPSHOT",
-   // "qualifier"));
-   // ByteArrayOutputStream content = new ByteArrayOutputStream();
-   // try {
-   // manifest.write(content);
-   // } catch (IOException e) {
-   // e.printStackTrace();
-   // }
-   // project.getFacet(ResourceFacet.class).createResource(content.toString().toCharArray(), "META-INF/MANIFEST.MF");
-   // }
-   // }
-   //
-   // }
-
-   @Command(help = "Create a Activator class")
-   public void newEntity(
+   @Command(value = "create-activator", help = "Create a Activator class")
+   public void createActivator(
             @Option(required = true,
-                     name = "name",
+                     name = "named",
                      description = "The Activator class name") final String activatorName,
             @Option(required = false,
                      name = "package",
@@ -250,7 +220,7 @@ public class EclipsePlugin implements Plugin
 
       JavaClass javaClass = JavaParser.create(JavaClass.class)
                .setPackage(activatorPackage)
-               .setName(activatorPackage)
+               .setName(activatorName)
                .setPublic()
                .addInterface(org.osgi.framework.BundleActivator.class);
 

@@ -1,5 +1,7 @@
 package org.jboss.forge.eclipse;
 
+import static org.junit.Assert.assertFalse;
+
 import javax.inject.Inject;
 
 import junit.framework.Assert;
@@ -7,9 +9,12 @@ import junit.framework.Assert;
 import org.apache.maven.model.Model;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.forge.maven.MavenCoreFacet;
+import org.jboss.forge.parser.java.JavaClass;
 import org.jboss.forge.project.Project;
 import org.jboss.forge.project.dependencies.DependencyResolver;
+import org.jboss.forge.project.facets.JavaSourceFacet;
 import org.jboss.forge.project.packaging.PackagingType;
+import org.jboss.forge.shell.util.Packages;
 import org.jboss.forge.test.AbstractShellTest;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.Test;
@@ -86,5 +91,23 @@ public class EclipsePluginTest extends AbstractShellTest
       getShell().execute("eclipse-plugins setup --type " + EclipsePackagingType.PLUGIN.getType());
       Model pom = project.getFacet(MavenCoreFacet.class).getPOM();
       Assert.assertEquals(EclipsePackagingType.PLUGIN.getType(), pom.getPackaging());
+   }
+   
+   @Test
+   public void testActivatorClass() throws Exception
+   {
+      Project project = initializeJavaProject();
+      queueInputLines("");
+      getShell().execute("eclipse-plugins setup");
+      Model pom = project.getFacet(MavenCoreFacet.class).getPOM();
+      Assert.assertEquals(EclipsePackagingType.PLUGIN.getType(), pom.getPackaging());
+      getShell().execute("eclipse-plugins create-activator --package com.test.plugin --named Activator");
+      
+      String path = Packages.toFileSyntax("com.test.plugin.Activator") + ".java";
+      JavaClass javaClass = (JavaClass) project.getFacet(JavaSourceFacet.class).getJavaResource(path).getJavaSource();
+
+      assertFalse(javaClass.hasSyntaxErrors());
+      javaClass = (JavaClass) project.getFacet(JavaSourceFacet.class).getJavaResource(javaClass).getJavaSource();
+      
    }
 }
