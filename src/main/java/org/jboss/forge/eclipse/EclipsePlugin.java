@@ -222,7 +222,7 @@ public class EclipsePlugin implements Plugin
                .setPackage(activatorPackage)
                .setName(activatorName)
                .setPublic()
-               .addInterface(org.osgi.framework.BundleActivator.class);
+               .addInterface("org.osgi.framework.BundleActivator");
 
       Field<JavaClass> context = javaClass.addField("private static BundleContext context;");
       javaClass.addMethod().setReturnType(context.getTypeInspector().toString()).setName("getContext")

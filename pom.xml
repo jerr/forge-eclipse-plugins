@@ -62,7 +62,7 @@
     <dependency>
       <groupId>org.jboss.forge</groupId>
       <artifactId>forge-shell</artifactId>
-      <scope>test</scope>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.jboss.forge</groupId>
@@ -73,11 +73,6 @@
       <groupId>org.jboss.forge</groupId>
       <artifactId>forge-maven-api</artifactId>
       <scope>provided</scope>
-    </dependency>
-    <dependency>
-    	<groupId>org.eclipse.tycho</groupId>
-    	<artifactId>tycho-core</artifactId>
-    	<version>0.15.0</version>
     </dependency>
   </dependencies>
   <repositories>
