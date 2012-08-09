@@ -24,6 +24,7 @@ package org.jboss.forge.eclipse;
 import java.util.Properties;
 import java.util.jar.Manifest;
 
+import org.jboss.forge.parser.java.JavaClass;
 import org.jboss.forge.resources.FileResource;
 
 /**
@@ -61,5 +62,10 @@ public interface EclipsePluginFacet extends EclipseFacet
     * Set the current Eclipse Plugin Build Properties (overwriting any existing properties)
     */
    public void setBuildProperties(Properties properties);
+   
+   /**
+    * Set Eclipse Plugin Activator class
+    */
+   public void setActivator(JavaClass activatorClass);
 
 }

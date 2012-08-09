@@ -53,6 +53,8 @@ import org.jboss.forge.shell.plugins.DefaultCommand;
 import org.jboss.forge.shell.plugins.Option;
 import org.jboss.forge.shell.plugins.PipeOut;
 import org.jboss.forge.shell.plugins.Plugin;
+import org.jboss.forge.shell.plugins.RequiresFacet;
+import org.jboss.forge.shell.plugins.RequiresProject;
 import org.jboss.forge.shell.util.ResourceUtil;
 
 /**
@@ -60,8 +62,8 @@ import org.jboss.forge.shell.util.ResourceUtil;
  * 
  */
 @Alias("eclipse-plugins")
-// @RequiresProject
-// @RequiresFacet({ DependencyFacet.class, MavenPluginFacet.class })
+@RequiresProject
+@RequiresFacet({ DependencyFacet.class, MavenPluginFacet.class })
 public class EclipsePlugin implements Plugin
 {
 
@@ -106,6 +108,7 @@ public class EclipsePlugin implements Plugin
 
       if (EclipsePackagingType.PLUGIN.equals(type))
       {
+         setSourceDirectory(sourceDirectory);
          if (!project.hasFacet(EclipsePluginFacet.class))
          {
             event.fire(new InstallFacets(EclipsePluginFacet.class));
@@ -187,11 +190,23 @@ public class EclipsePlugin implements Plugin
       pom.setPackaging(type.getType());
       mavenFacet.setPOM(pom);
    }
+   
+   private void setSourceDirectory(String sourceDirectory)
+   {
+      MavenCoreFacet mavenFacet = project.getFacet(MavenCoreFacet.class);
+      Model pom = mavenFacet.getPOM();
+      if (!sourceDirectory.equals(pom.getBuild().getSourceDirectory()))
+      {
+         pom.getBuild().setSourceDirectory(sourceDirectory);
+         mavenFacet.setPOM(pom);
+      }
+   }
 
    @Command(value = "create-activator", help = "Create a Activator class")
    public void createActivator(
             @Option(required = true,
                      name = "named",
+                     defaultValue = "Activator",
                      description = "The Activator class name") final String activatorName,
             @Option(required = false,
                      name = "package",
@@ -200,6 +215,7 @@ public class EclipsePlugin implements Plugin
             throws Throwable
    {
       final JavaSourceFacet java = project.getFacet(JavaSourceFacet.class);
+      final EclipsePluginFacet eclipse = project.getFacet(EclipsePluginFacet.class);
 
       String activatorPackage;
 
@@ -239,12 +255,14 @@ public class EclipsePlugin implements Plugin
 
       JavaResource javaFileLocation = java.saveJavaSource(javaClass);
 
-      shell.println("Created eclipse plugin activator [" + javaClass.getQualifiedName() + "]");
+      eclipse.setActivator(javaClass);
 
+      shell.println("Created eclipse plugin activator [" + javaClass.getQualifiedName() + "]");
       /**
        * Pick up the generated resource.
        */
       shell.execute("pick-up " + javaFileLocation.getFullyQualifiedName().replace(" ", "\\ "));
+      
    }
 
    /**

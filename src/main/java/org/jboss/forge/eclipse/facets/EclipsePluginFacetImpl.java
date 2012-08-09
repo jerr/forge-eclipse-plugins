@@ -38,6 +38,7 @@ import org.apache.maven.model.Model;
 import org.jboss.forge.eclipse.EclipsePluginFacet;
 import org.jboss.forge.maven.MavenCoreFacet;
 import org.jboss.forge.maven.MavenPluginFacet;
+import org.jboss.forge.parser.java.JavaClass;
 import org.jboss.forge.project.Facet;
 import org.jboss.forge.project.ProjectModelException;
 import org.jboss.forge.project.facets.BaseFacet;
@@ -68,13 +69,14 @@ public class EclipsePluginFacetImpl extends BaseFacet implements EclipsePluginFa
    @Override
    public boolean isInstalled()
    {
-      return getManiestFile().exists();
+      return getManiestFile().exists() && getBuildPropertiesFile().exists();
    }
 
    @Override
    public boolean install()
    {
       createManifest();
+      installBuildProperties();
       return true;
    }
 
@@ -173,9 +175,24 @@ public class EclipsePluginFacetImpl extends BaseFacet implements EclipsePluginFa
                new Name(Constants.BUNDLE_SYMBOLICNAME),
                pom.getArtifactId() + "; singleton:=true");
       manifest.getMainAttributes().put(new Name(Constants.BUNDLE_VERSION),
-               pom.getVersion().replace("SNAPSHOT", "qualifier"));
+               pom.getVersion().replace("-SNAPSHOT", ".qualifier"));
+      manifest.getMainAttributes().put(new Name(Constants.REQUIRE_BUNDLE),"org.eclipse.core.runtime");
+      manifest.getMainAttributes().put(new Name(Constants.BUNDLE_ACTIVATIONPOLICY),Constants.ACTIVATION_LAZY);      
       setManifest(manifest);
       return manifest;
+   }
+
+   private void installBuildProperties()
+   {
+      MavenCoreFacet mavenFacet = project.getFacet(MavenCoreFacet.class);
+      Model pom = mavenFacet.getPOM();
+      String sourceDirectory = pom.getBuild().getSourceDirectory();
+      {
+         Properties properties =  getBuildProperties();
+         properties.setProperty("source..", sourceDirectory);
+         properties.setProperty("output..", "bin");
+         setBuildProperties(properties);
+      }
    }
 
    @Override
@@ -250,6 +267,14 @@ public class EclipsePluginFacetImpl extends BaseFacet implements EclipsePluginFa
 
       manager.fireEvent(new ResourceModified(getBuildPropertiesFile()),
                new Annotation[] {});
+   }
+
+   @Override
+   public void setActivator(JavaClass activatorClass)
+   {
+      Manifest manifest = getManifest();
+      manifest.getMainAttributes().put(new Name(Constants.BUNDLE_ACTIVATOR),activatorClass.getQualifiedName());
+      setManifest(manifest);
    }
 
 }
