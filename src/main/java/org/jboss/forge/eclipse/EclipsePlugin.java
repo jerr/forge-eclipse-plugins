@@ -114,6 +114,13 @@ public class EclipsePlugin implements Plugin
             event.fire(new InstallFacets(EclipsePluginFacet.class));
          }
       }
+      else if (EclipsePackagingType.FEATURE.equals(type))
+      {
+         if (!project.hasFacet(EclipseFeatureFacet.class))
+         {
+            event.fire(new InstallFacets(EclipseFeatureFacet.class));
+         }
+      }
    }
 
    private void installTychoMavenPlugin(PipeOut out, String tychoVersion)
@@ -190,7 +197,7 @@ public class EclipsePlugin implements Plugin
       pom.setPackaging(type.getType());
       mavenFacet.setPOM(pom);
    }
-   
+
    private void setSourceDirectory(String sourceDirectory)
    {
       MavenCoreFacet mavenFacet = project.getFacet(MavenCoreFacet.class);
@@ -262,7 +269,7 @@ public class EclipsePlugin implements Plugin
        * Pick up the generated resource.
        */
       shell.execute("pick-up " + javaFileLocation.getFullyQualifiedName().replace(" ", "\\ "));
-      
+
    }
 
    /**

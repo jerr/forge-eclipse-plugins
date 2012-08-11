@@ -41,7 +41,6 @@ import org.jboss.forge.maven.MavenPluginFacet;
 import org.jboss.forge.parser.java.JavaClass;
 import org.jboss.forge.project.Facet;
 import org.jboss.forge.project.ProjectModelException;
-import org.jboss.forge.project.facets.BaseFacet;
 import org.jboss.forge.resources.FileResource;
 import org.jboss.forge.resources.Resource;
 import org.jboss.forge.resources.events.ResourceModified;
@@ -56,16 +55,10 @@ import org.osgi.framework.Constants;
 @Dependent
 @Alias("forge.eclipse.EclipsePluginFacet")
 @RequiresFacet({ MavenPluginFacet.class })
-public class EclipsePluginFacetImpl extends BaseFacet implements EclipsePluginFacet, Facet
+public class EclipsePluginFacetImpl extends AbstractEclipseFacetImpl implements EclipsePluginFacet, Facet
 {
-
-   @Inject
-   private BeanManager manager;
-
-   public EclipsePluginFacetImpl()
-   {
-   }
-
+   @Inject BeanManager manager;
+   
    @Override
    public boolean isInstalled()
    {
@@ -196,85 +189,17 @@ public class EclipsePluginFacetImpl extends BaseFacet implements EclipsePluginFa
    }
 
    @Override
-   public Properties getBuildProperties()
-   {
-      Properties properties = new Properties();
-
-      if (getBuildPropertiesFile().exists())
-      {
-         InputStream inputStream = getBuildPropertiesFile().getResourceInputStream();
-         try
-         {
-            properties.load(inputStream);
-         }
-         catch (IOException e)
-         {
-            throw new ProjectModelException("Could not read build.properties file: "
-                     + getBuildPropertiesFile(), e);
-         }
-         finally
-         {
-            if (inputStream != null)
-               try
-               {
-                  inputStream.close();
-               }
-               catch (IOException e)
-               {
-                  throw new ProjectModelException("Could not read build.properties file: "
-                           + getBuildPropertiesFile(), e);
-               }
-         }
-      }
-      return properties;
-   }
-
-   @Override
-   public FileResource<?> getBuildPropertiesFile()
-   {
-      Resource<?> file = project.getProjectRoot().getChild(
-               "build.properties");
-      return (FileResource<?>) file;
-   }
-
-   @Override
-   public void setBuildProperties(Properties properties)
-   {
-      FileWriter fw = null;
-      try
-      {
-         fw = new FileWriter(getBuildPropertiesFile().getUnderlyingResourceObject());
-         properties.store(fw, null);
-      }
-      catch (IOException e)
-      {
-         throw new ProjectModelException("Could not write build.properties file: "
-                  + getBuildPropertiesFile(), e);
-      }
-      finally
-      {
-         if (fw != null)
-            try
-            {
-               fw.close();
-            }
-            catch (IOException e)
-            {
-               throw new ProjectModelException("Could not write build.properties file: "
-                        + getBuildPropertiesFile(), e);
-            }
-      }
-
-      manager.fireEvent(new ResourceModified(getBuildPropertiesFile()),
-               new Annotation[] {});
-   }
-
-   @Override
    public void setActivator(JavaClass activatorClass)
    {
       Manifest manifest = getManifest();
       manifest.getMainAttributes().put(new Name(Constants.BUNDLE_ACTIVATOR),activatorClass.getQualifiedName());
       setManifest(manifest);
+   }
+
+   @Override
+   protected BeanManager getBeanManager()
+   {
+      return manager;
    }
 
 }
